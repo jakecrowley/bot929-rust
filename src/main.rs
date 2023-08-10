@@ -1,13 +1,10 @@
 use std::env;
 use std::sync::Arc;
 
-use poise::{serenity_prelude as serenity, FrameworkOptions};
+use poise::{serenity_prelude as serenity, FrameworkOptions, PrefixFrameworkOptions};
 
 use prelude::{BotResult, BotDatabase};
-use serenity::async_trait;
-use serenity::http::Http;
-use serenity::model::prelude::{UserId, Ready};
-use serenity::{GatewayIntents, Context, EventHandler};
+use serenity::{GatewayIntents, Context};
 
 use mongodm::prelude::MongoClientOptions;
 use mongodm::{mongo::options::ResolverConfig, prelude::MongoDatabase, prelude::MongoClient};
@@ -15,15 +12,10 @@ use mongodm::{mongo::options::ResolverConfig, prelude::MongoDatabase, prelude::M
 pub mod prelude;
 use crate::prelude::BotFramework;
 
-use anyhow::Result as AnyResult;
+pub mod commands;
 
-struct Handler;
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-    }
-}
+
+use anyhow::Result as AnyResult;
 
 pub struct BotConfig {
     pub bot_token: String,
@@ -40,13 +32,6 @@ async fn main() -> AnyResult<()>{
     let token: String = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN environment variable");
     let mongo_uri: String = env::var("MONGO_URI").expect("Expected a DISCORD_TOKEN environment variable");
     let database: String = env::var("MONGO_DATABASE").expect("Expected a DISCORD_TOKEN environment variable");
-
-    // let http = Http::new(&token);
-
-    // let bot_id: UserId = match http.get_current_user().await {
-    //     Ok(bot_id) => bot_id.id,
-    //     Err(why) => panic!("Could not access bot id: {:?}", why),
-    // };
 
     let config: BotConfig = BotConfig {
         bot_token: token,
@@ -66,8 +51,13 @@ impl Bot {
     pub async fn new(config: BotConfig) -> BotResult<Self>{
         let framework = BotFramework::builder()
         .token(&config.bot_token)
-        .intents(GatewayIntents::privileged() | GatewayIntents::MESSAGE_CONTENT)
+        .intents(GatewayIntents::privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES)
         .options(FrameworkOptions {
+            prefix_options: PrefixFrameworkOptions {
+                prefix: Some("!".into()),
+                ..Default::default()
+            },
+            commands: vec![commands::bot::profile()],
             ..Default::default()
         })
         .setup(move |_context: &Context, _, _framework: &poise::Framework<BotDatabase, prelude::error::BotError>| {

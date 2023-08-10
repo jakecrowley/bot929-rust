@@ -1,4 +1,4 @@
-use poise::{Command, Framework};
+use poise::{Command, Framework, Context, FrameworkError};
 use mongodm::prelude::MongoDatabase;
 
 pub mod error;
@@ -9,8 +9,12 @@ pub struct BotDatabase {
     pub database: MongoDatabase,
 }
 
+pub type BotContext<'a> = Context<'a, BotDatabase, BotError>;
+
 pub type BotFramework = Framework<BotDatabase, BotError>;
 
 pub type BotCommand = Command<BotDatabase, BotError>;
 
 pub type BotResult<T> = Result<T, BotError>;
+
+pub type BotFrameworkError<'a> = FrameworkError<'a, BotDatabase, BotError>;
