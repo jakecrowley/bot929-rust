@@ -1,21 +1,54 @@
+use bson::{doc, Bson};
+use mongodm::f;
+
 use poise::command;
-use poise::serenity_prelude::{User, UserId, GuildId};
+use poise::serenity_prelude::{User, CreateEmbed, ChannelId, GuildId, CacheHttp};
 
 use crate::prelude::{BotContext, BotResult};
-
+use crate::Nine92er;
 
 #[command(prefix_command)]
 pub async fn profile(
     ctx: BotContext<'_>,
-    #[description = "Retrieve you or someone else's 929 profile."] user: Option<User>,
+    #[description = "Retrieve your or someone else's 929 profile."] user: Option<User>,
     
 ) -> BotResult<()> {
-    let user_id: UserId = user.as_ref().unwrap_or(ctx.author()).id;
+    let channel_id: ChannelId = ctx.channel_id();
+
+    if channel_id.0 != 674812650907238405 {
+        return Ok(())
+    }
+
+    let user: &User = user.as_ref().unwrap_or(ctx.author());
     let guild_id: GuildId = ctx.guild_id().unwrap();
 
-    println!("user executed profile command");
+    let nickname: String = user.nick_in(&ctx.http(), guild_id).await.unwrap_or(user.name.clone());
 
-    ctx.send(|response: &mut poise::CreateReply<'_>| response.content(format!("<@{}> deez nuts lmao", user_id)).reply(true)).await?;
+    let user_id_bson: Bson = Bson::Int64(user.id.0 as i64);
+    let profile: Option<Nine92er> = ctx.data().nine29ers.find_one(doc! { f!(_id in Nine92er): user_id_bson }, None).await?;
+    
+    match profile {
+        Some(profile) => {
+            let msg = ctx.send(|resp| 
+                resp.embed(|e: &mut CreateEmbed| {
+                    e.title(format!("Profile for {}", nickname))
+                     .fields(vec![
+                        ("Current Streak", profile.currentstreak, false),
+                        ("Longest Streak", profile.maxstreak, false),
+                     ])
+                     .field("Total Points", profile.points, false)
+                     .field("Total 929s", profile.count, false)
+                }).reply(true)
+            ).await;
+
+            if let Err(why) = msg {
+                println!("Error sending message: {:?}", why);
+            }
+        },
+        None => {
+            ctx.send(|response: &mut poise::CreateReply<'_>| response.content("You have not participated in a 9:29 yet!").reply(true)).await?;
+        }
+    };
 
     Ok(())
 }

@@ -1,12 +1,15 @@
 use poise::{Command, Framework, Context, FrameworkError};
-use mongodm::prelude::MongoDatabase;
+use mongodm::prelude::{MongoDatabase, MongoCollection};
 
 pub mod error;
 use error::BotError;
 
+pub mod utils;
+
 #[derive(Clone, Debug)]
 pub struct BotDatabase {
     pub database: MongoDatabase,
+    pub nine29ers: MongoCollection<crate::Nine92er>,
 }
 
 pub type BotContext<'a> = Context<'a, BotDatabase, BotError>;
