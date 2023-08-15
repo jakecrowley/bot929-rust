@@ -67,7 +67,7 @@ impl Bot {
                 prefix: Some("!".into()),
                 ..Default::default()
             },
-            commands: vec![commands::bot::profile()],
+            commands: vec![commands::bot::profile(), commands::bot::leaderboard()],
             ..Default::default()
         })
         .setup(move |_context: &Context, _, _framework: &poise::Framework<BotDatabase, prelude::error::BotError>| {

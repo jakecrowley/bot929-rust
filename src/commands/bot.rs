@@ -1,7 +1,9 @@
 use bson::{doc, Bson};
 use mongodm::f;
 
+use mongodm::prelude::MongoCursor;
 use poise::command;
+use poise::futures_util::TryStreamExt;
 use poise::serenity_prelude::{User, CreateEmbed, ChannelId, GuildId, CacheHttp};
 
 use crate::prelude::{BotContext, BotResult};
@@ -11,7 +13,6 @@ use crate::Nine92er;
 pub async fn profile(
     ctx: BotContext<'_>,
     #[description = "Retrieve your or someone else's 929 profile."] user: Option<User>,
-    
 ) -> BotResult<()> {
     let channel_id: ChannelId = ctx.channel_id();
 
@@ -41,6 +42,7 @@ pub async fn profile(
                 }).reply(true)
             ).await;
 
+
             if let Err(why) = msg {
                 println!("Error sending message: {:?}", why);
             }
@@ -49,6 +51,28 @@ pub async fn profile(
             ctx.send(|response: &mut poise::CreateReply<'_>| response.content("You have not participated in a 9:29 yet!").reply(true)).await?;
         }
     };
+
+    Ok(())
+}
+
+#[command(prefix_command)]
+pub async fn leaderboard(ctx: BotContext<'_>) -> BotResult<()> {
+    // let mut leaderboard_str: String = "".to_owned();
+
+    let mut users: Vec<Nine92er> = Vec::new();
+
+    let mut users_cursor: MongoCursor<Nine92er> = ctx.data().nine29ers.find(None, None).await?;
+    while let Some(nine92er) = users_cursor.try_next().await?{
+        users.push(nine92er);
+    }
+    users.sort_by(|a, b| a.count.cmp(&b.count).reverse());
+
+    for user in users {
+        println!("{}", user._id)
+    }
+
+    // let position: i32 = 0;
+    // let stop: i32 = 10;
 
     Ok(())
 }
