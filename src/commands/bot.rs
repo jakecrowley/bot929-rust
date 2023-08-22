@@ -1,14 +1,10 @@
-use std::cmp::Ordering;
-
 use bson::{doc, Bson};
 use mongodm::f;
 
-use mongodm::prelude::MongoCursor;
 use poise::command;
-use poise::futures_util::TryStreamExt;
-use poise::serenity_prelude::{User, CreateEmbed, GuildId, CacheHttp, Member, Color, ButtonStyle, ReactionType};
+use poise::serenity_prelude::{User, CreateEmbed, GuildId, CacheHttp, Color, ButtonStyle, ReactionType};
 
-use crate::prelude::utils::sanitize_username;
+use crate::prelude::utils::get_leaderboard;
 use crate::prelude::{BotContext, BotResult};
 use crate::Nine92er;
 
@@ -62,39 +58,7 @@ pub async fn leaderboard(ctx: BotContext<'_>) -> BotResult<()> {
         return Ok(())
     }
 
-    let mut leaderboard_str: String = "".to_owned();
-    let members: Vec<Member> = ctx.http().get_guild_members(377637608848883723, None, None).await?;
-    // let guild = ctx.guild_id().expect("Unable to unwrap guild id");
-
-    let mut users: Vec<Nine92er> = Vec::new();
-
-    let mut users_cursor: MongoCursor<Nine92er> = ctx.data().nine29ers.find(None, None).await?;
-    while let Some(nine92er) = users_cursor.try_next().await?{
-        users.push(nine92er);
-    }
-    users.sort_by(|a, b| a.points.partial_cmp(&b.points).unwrap_or(Ordering::Equal));
-    users.reverse();
-
-    let position: usize = 0;
-    let stop: usize = if users.len() >= position + 10 { position + 10 } else { users.len() };
-
-    let mut i: usize = position;
-    while i < stop {
-        let nine92er: &Nine92er = users.get(i).unwrap();
-        let member: Option<Member> = members.clone().into_iter().find(|r| r.user.id.0 == nine92er._id as u64);
-
-        match member {
-            Some(m) => {
-                leaderboard_str.push_str(format!("{}. {}: {}\n", i+1, sanitize_username(m.display_name().to_string()), nine92er.points).as_str());
-            }
-            None => {
-                println!("Couldn't find member with ID {}", nine92er._id);
-                users.remove(i);
-                continue;
-            }
-        }
-        i += 1;
-    }
+    let leaderboard_str: String = get_leaderboard(ctx.data(), ctx.http(), 0).await?;
 
     let _msg = ctx.send(|resp| 
         resp.embed(|e: &mut CreateEmbed| {

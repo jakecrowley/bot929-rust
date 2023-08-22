@@ -50,4 +50,9 @@ pub enum BotError {
         /// The path of the file trying to be opened or read.
         path: PathBuf,
     },
+    /// Generic
+    #[snafu(display("an error has occurred: {}", message))]
+    Generic {
+        message: &'static str,
+    }
 }

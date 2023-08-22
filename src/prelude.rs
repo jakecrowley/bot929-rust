@@ -6,6 +6,8 @@ use error::BotError;
 
 pub mod utils;
 
+pub mod events;
+
 #[derive(Clone, Debug)]
 pub struct BotDatabase {
     pub database: MongoDatabase,

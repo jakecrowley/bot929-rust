@@ -1,7 +1,6 @@
 use std::env;
 use std::sync::Arc;
 
-use poise::serenity_prelude::InteractionCreateEvent;
 use poise::{serenity_prelude as serenity, FrameworkOptions, PrefixFrameworkOptions};
 
 use prelude::{BotResult, BotDatabase};
@@ -13,6 +12,7 @@ use mongodm::{mongo::options::ResolverConfig, prelude::MongoDatabase, prelude::M
 
 pub mod prelude;
 use crate::prelude::BotFramework;
+use crate::prelude::events::event_handler;
 
 pub mod commands;
 
@@ -68,14 +68,7 @@ impl Bot {
                 prefix: Some("!".into()),
                 ..Default::default()
             },
-            event_handler: |_ctx, event, _framework, _data| {
-                Box::pin(async move {
-                    println!("Got an event in event handler: {:?}", event.name());
-                    let e: InteractionCreateEvent = event.into();
-
-                    Ok(())
-                })
-            },
+            event_handler: |ctx: &Context, event, framework, data| Box::pin(event_handler(ctx, event, framework, data)),
             commands: vec![commands::bot::profile(), commands::bot::leaderboard()],
             ..Default::default()
         })
