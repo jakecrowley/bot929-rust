@@ -1,11 +1,14 @@
+use std::cmp::Ordering;
+
 use bson::{doc, Bson};
 use mongodm::f;
 
 use mongodm::prelude::MongoCursor;
 use poise::command;
 use poise::futures_util::TryStreamExt;
-use poise::serenity_prelude::{User, CreateEmbed, ChannelId, GuildId, CacheHttp};
+use poise::serenity_prelude::{User, CreateEmbed, GuildId, CacheHttp, Member, Color, ButtonStyle, ReactionType};
 
+use crate::prelude::utils::sanitize_username;
 use crate::prelude::{BotContext, BotResult};
 use crate::Nine92er;
 
@@ -14,9 +17,7 @@ pub async fn profile(
     ctx: BotContext<'_>,
     #[description = "Retrieve your or someone else's 929 profile."] user: Option<User>,
 ) -> BotResult<()> {
-    let channel_id: ChannelId = ctx.channel_id();
-
-    if channel_id.0 != 674812650907238405 {
+    if ctx.channel_id().0 != 674812650907238405 {
         return Ok(())
     }
 
@@ -57,7 +58,13 @@ pub async fn profile(
 
 #[command(prefix_command)]
 pub async fn leaderboard(ctx: BotContext<'_>) -> BotResult<()> {
-    // let mut leaderboard_str: String = "".to_owned();
+    if ctx.channel_id().0 != 674812650907238405 {
+        return Ok(())
+    }
+
+    let mut leaderboard_str: String = "".to_owned();
+    let members: Vec<Member> = ctx.http().get_guild_members(377637608848883723, None, None).await?;
+    // let guild = ctx.guild_id().expect("Unable to unwrap guild id");
 
     let mut users: Vec<Nine92er> = Vec::new();
 
@@ -65,14 +72,45 @@ pub async fn leaderboard(ctx: BotContext<'_>) -> BotResult<()> {
     while let Some(nine92er) = users_cursor.try_next().await?{
         users.push(nine92er);
     }
-    users.sort_by(|a, b| a.count.cmp(&b.count).reverse());
+    users.sort_by(|a, b| a.points.partial_cmp(&b.points).unwrap_or(Ordering::Equal));
+    users.reverse();
 
-    for user in users {
-        println!("{}", user._id)
+    let position: usize = 0;
+    let stop: usize = if users.len() >= position + 10 { position + 10 } else { users.len() };
+
+    let mut i: usize = position;
+    while i < stop {
+        let nine92er: &Nine92er = users.get(i).unwrap();
+        let member: Option<Member> = members.clone().into_iter().find(|r| r.user.id.0 == nine92er._id as u64);
+
+        match member {
+            Some(m) => {
+                leaderboard_str.push_str(format!("{}. {}: {}\n", i+1, sanitize_username(m.display_name().to_string()), nine92er.points).as_str());
+            }
+            None => {
+                println!("Couldn't find member with ID {}", nine92er._id);
+                users.remove(i);
+                continue;
+            }
+        }
+        i += 1;
     }
 
-    // let position: i32 = 0;
-    // let stop: i32 = 10;
+    let _msg = ctx.send(|resp| 
+        resp.embed(|e: &mut CreateEmbed| {
+            e.title("Leaderboard")
+             .description(leaderboard_str)
+             .color(Color::DARK_RED)
+        }).components(|c| {
+            c.create_action_row(|r| {
+                r.create_button(|b| {
+                    b.style(ButtonStyle::Primary).custom_id("prev").label("").emoji(ReactionType::Unicode("⬅️".to_string()))
+                }).create_button(|b| {
+                    b.style(ButtonStyle::Primary).custom_id("next").label("").emoji(ReactionType::Unicode("➡️".to_string()))
+                })
+            })
+        }).reply(true)
+    ).await?;
 
     Ok(())
 }

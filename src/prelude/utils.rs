@@ -25,3 +25,7 @@ where
         })
     }
 }
+
+pub fn sanitize_username(str: String) -> String {
+    return str.replace("||", "\\|\\|");
+}

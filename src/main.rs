@@ -1,6 +1,7 @@
 use std::env;
 use std::sync::Arc;
 
+use poise::serenity_prelude::InteractionCreateEvent;
 use poise::{serenity_prelude as serenity, FrameworkOptions, PrefixFrameworkOptions};
 
 use prelude::{BotResult, BotDatabase};
@@ -61,11 +62,19 @@ impl Bot {
     pub async fn new(config: BotConfig) -> BotResult<Self>{
         let framework = BotFramework::builder()
         .token(&config.bot_token)
-        .intents(GatewayIntents::privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES)
+        .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGES)
         .options(FrameworkOptions {
             prefix_options: PrefixFrameworkOptions {
                 prefix: Some("!".into()),
                 ..Default::default()
+            },
+            event_handler: |_ctx, event, _framework, _data| {
+                Box::pin(async move {
+                    println!("Got an event in event handler: {:?}", event.name());
+                    let e: InteractionCreateEvent = event.into();
+
+                    Ok(())
+                })
             },
             commands: vec![commands::bot::profile(), commands::bot::leaderboard()],
             ..Default::default()
