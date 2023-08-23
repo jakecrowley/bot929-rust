@@ -4,7 +4,7 @@ use bson::{Bson, to_bson, doc};
 use chrono::{Local, Timelike, DateTime };
 use chrono_tz::US::Eastern;
 use mongodm::{prelude::MongoCursor, f};
-use poise::serenity_prelude::{Member, Http, Message, CreateMessage, Context};
+use poise::serenity_prelude::{Member, Http, Message, CreateMessage, Context, CacheHttp};
 use serde::Serialize;
 use poise::futures_util::TryStreamExt;
 use serde_json::Value;
@@ -47,7 +47,7 @@ pub fn msg_to_json(msg: String) -> Value {
     return serde_json::to_value(&CreateMessage::default().content(msg).0).unwrap();
 }
 
-pub async fn nine29thread(_ctx: &Context, data: &BotDatabase) {
+pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
     println!("Check 929 thread started!");
 
     loop {
@@ -68,15 +68,16 @@ pub async fn nine29thread(_ctx: &Context, data: &BotDatabase) {
 
             let first: &mut u64 = &mut *data.first.lock().await;
 
-            // if *first == 0 {
-            //     let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
-            // } else {
-            //     let firstuser = ctx.get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
-            //     let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json(
-            //         format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
-            //     )).await;
-            // }
-            println!("{} was first!", first);
+            if *first == 0 {
+                // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
+                println!("Nobody did 929 :(");
+            } else {
+                let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
+                // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json(
+                //     format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
+                // )).await;
+                println!("{} was first!", sanitize_username(firstuser.display_name().to_string()));
+            }
 
             let did929: &mut Vec<u64> = &mut *data.did929.lock().await;
             
@@ -156,7 +157,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
             }
         }
     } else {
-        println!("it is not 929 {}:{}", ts.hour(), ts.minute());
+        println!("User sent 929 but it is not 929 {}:{}", ts.hour(), ts.minute());
     }
 
     Ok(())
