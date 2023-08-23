@@ -9,6 +9,7 @@ use serenity::{GatewayIntents, Context};
 
 use mongodm::prelude::{MongoClientOptions, MongoCollection};
 use mongodm::{mongo::options::ResolverConfig, prelude::MongoDatabase, prelude::MongoClient};
+use tokio::sync::Mutex;
 
 pub mod prelude;
 use crate::prelude::BotFramework;
@@ -32,6 +33,12 @@ pub struct Nine92er {
     pub points: f64,
     pub maxstreak: i32,
     pub count: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Pastlist {
+    pub _id: i64,
+    pub _t: String,
 }
 
 #[tokio::main]
@@ -91,10 +98,14 @@ async fn setup_bot_database(config: BotConfig) -> BotResult<BotDatabase>
 {
     let database: MongoDatabase = setup_database(&config.mongo_uri, &config.database).await?;
     let col: MongoCollection<Nine92er> = database.collection("nine29ers");
+    let pastlist_col: MongoCollection<Pastlist> = database.collection("pastlist");
 
     let db: BotDatabase = BotDatabase {
         database: database,
         nine29ers: col,
+        pastlist: pastlist_col,
+        did929: Arc::new(Mutex::new(Vec::new())),
+        first: Arc::new(Mutex::new(0)),
     };
 
     Ok(db)

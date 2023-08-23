@@ -8,12 +8,14 @@ use crate::prelude::utils::get_leaderboard;
 use crate::prelude::{BotContext, BotResult};
 use crate::Nine92er;
 
+use crate::prelude::utils::CHANNEL_CONF;
+
 #[command(prefix_command)]
 pub async fn profile(
     ctx: BotContext<'_>,
     #[description = "Retrieve your or someone else's 929 profile."] user: Option<User>,
 ) -> BotResult<()> {
-    if ctx.channel_id().0 != 674812650907238405 {
+    if ctx.channel_id().0 != CHANNEL_CONF.channel_id {
         return Ok(())
     }
 
@@ -54,7 +56,7 @@ pub async fn profile(
 
 #[command(prefix_command)]
 pub async fn leaderboard(ctx: BotContext<'_>) -> BotResult<()> {
-    if ctx.channel_id().0 != 674812650907238405 {
+    if ctx.channel_id().0 != CHANNEL_CONF.channel_id {
         return Ok(())
     }
 

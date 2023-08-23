@@ -2,15 +2,26 @@ use poise::serenity_prelude::{CurrentUser, MessageComponentInteraction, Context,
 use poise::serenity_prelude::CacheHttp;
 use poise::Event;
 
-use crate::prelude::utils::get_leaderboard;
+use crate::prelude::utils::{get_leaderboard, nine29thread};
 
+use super::utils::check_message_for_929;
 use super::{BotDatabase, error::BotError, BotResult};
 
 pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::FrameworkContext<'_, BotDatabase, BotError>, data: &BotDatabase) -> BotResult<()>{
     match event {
         Event::Ready { data_about_bot } => {
             let user: &CurrentUser = &data_about_bot.user;
+
+            let data_clone = data.clone();
+            let ctx_clone = ctx.clone();
+            tokio::spawn(async move {
+                nine29thread(&ctx_clone, &data_clone).await;
+            });
+
             println!("Bot ready! Logged in as user: {}#{}", user.name, user.discriminator);
+        }
+        Event::Message { new_message } => {
+            check_message_for_929(new_message, data).await?;
         }
         Event::InteractionCreate { interaction } => {
             let mut comp: MessageComponentInteraction = interaction.clone().into_message_component().expect("Interaction could not be converted into message component.");
@@ -19,7 +30,7 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
             match comp.data.custom_id.as_str() {
                 "prev" => {
                     let embed: &Embed = comp.message.embeds.get(0).expect("Message does not contain an embed!");
-                    let first_pos: usize = embed.description.as_ref().expect("no description?").split_once(".").expect("idek").0.to_string().parse::<usize>().unwrap();
+                    let first_pos: usize = embed.description.as_ref().expect("no description").split_once(".").unwrap().0.to_string().parse::<usize>().unwrap();
                     if first_pos >= 10 {
                         let leaderboard_str = get_leaderboard(data, &ctx.http, first_pos - 11).await?;
                         comp.message.edit(ctx.http(), |resp| 
