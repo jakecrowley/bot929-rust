@@ -18,20 +18,20 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
                 nine29thread(&ctx_clone, &data_clone).await;
             });
 
-            println!("Bot ready! Logged in as user: {}#{}", user.name, user.discriminator);
+            log::info!("Bot ready! Logged in as user: {}#{}", user.name, user.discriminator);
         }
         Event::Message { new_message } => {
             let res = check_message_for_929(new_message, data).await;
             match res {
                 Err(e) => {
-                    println!("{}", e.to_string())
+                    log::error!("{}", e.to_string())
                 },
                 Ok(_) => {}
             }
         }
         Event::InteractionCreate { interaction } => {
             let mut comp: MessageComponentInteraction = interaction.clone().into_message_component().expect("Interaction could not be converted into message component.");
-            println!("Component interaction triggered: custom_id = {}", comp.data.custom_id);
+            log::info!("Component interaction triggered: custom_id = {}", comp.data.custom_id);
 
             match comp.data.custom_id.as_str() {
                 "prev" => {
@@ -64,7 +64,7 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
                     let leaderboard_str: String = match leaderboard_str_res {
                         Ok(ldb) => ldb,
                         Err(err) => {
-                            println!("{}", err);
+                            log::error!("{}", err);
                             comp.defer(ctx.http()).await?;
                             return Ok(());
                         }

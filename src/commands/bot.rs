@@ -43,7 +43,7 @@ pub async fn profile(
 
 
             if let Err(why) = msg {
-                println!("Error sending message: {:?}", why);
+                log::error!("Error sending message: {:?}", why);
             }
         },
         None => {

@@ -48,13 +48,13 @@ pub fn msg_to_json(msg: String) -> Value {
 }
 
 pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
-    println!("Check 929 thread started!");
+    log::info!("Check 929 thread started!");
 
     loop {
         thread::sleep(std::time::Duration::from_millis(100));
         let mut now: DateTime<_> = Local::now().with_timezone(&Eastern);
         if (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min) {
-            println!("It is 929!");
+            log::info!("It is 929!");
             
             while (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min)
             {
@@ -62,7 +62,7 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
                 thread::sleep(std::time::Duration::from_millis(100));
             }
 
-            println!("It is no longer 929!");
+            log::info!("It is no longer 929!");
 
             thread::sleep(std::time::Duration::from_secs(1));
 
@@ -70,13 +70,13 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
 
             if *first == 0 {
                 // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
-                println!("Nobody did 929 :(");
+                log::info!("Nobody did 929 :(");
             } else {
                 let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
                 // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json(
                 //     format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
                 // )).await;
-                println!("{} was first!", sanitize_username(firstuser.display_name().to_string()));
+                log::info!("{} was first!", sanitize_username(firstuser.display_name().to_string()));
             }
 
             let did929: &mut Vec<u64> = &mut *data.did929.lock().await;
@@ -108,7 +108,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
         let first: &mut u64 = &mut *data.first.lock().await;
         if msg.contains("929") && !did929.contains(&author_id) {
             did929.push(author_id);
-            println!("{} did 929!", message.author.name);
+            log::info!("{} did 929!", message.author.name);
 
             let author_id_bson: Bson = Bson::Int64(author_id as i64);
             let pl: Option<Pastlist> = data.pastlist.find_one(doc! { f!(_id in Pastlist): author_id_bson.clone() }, None).await?;
@@ -153,11 +153,11 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
             let update = doc! { "$set": { "currentstreak": profile.currentstreak, "points": profile.points, "count": profile.count, "maxstreak": profile.maxstreak }};
             let update_result = data.nine29ers.update_one(doc! { f!(_id in Nine92er): author_id_bson }, update, None).await?;
             if update_result.modified_count != 1 {
-                println!("Failed to update user {}", author_id);
+                log::error!("Failed to update user {}", author_id);
             }
         }
     } else if msg.contains("929") {
-        println!("User sent 929 but it is not 929 {}:{}", ts.hour(), ts.minute());
+        log::info!("User sent 929 but it is not 929 {}:{}", ts.hour(), ts.minute());
     }
 
     Ok(())
@@ -196,7 +196,7 @@ pub async fn get_leaderboard(data: &BotDatabase, http: &Http, position: usize) -
                 leaderboard_str.push_str(format!("{}. {}: {}\n", i+1, sanitize_username(m.display_name().to_string()), nine92er.points).as_str());
             }
             None => {
-                println!("Couldn't find member with ID {}", nine92er._id);
+                log::warn!("Couldn't find member with ID {}", nine92er._id);
                 users.remove(i);
                 stop = if users.len() >= position + 10 { position + 10 } else { users.len() };
                 continue;
