@@ -23,7 +23,7 @@ pub struct ChannelConfig {
     pub guild_id: u64,
 }
 
-static TRIGGER_TIME: TriggerTime = TriggerTime { hour: 9, min: 29};
+static TRIGGER_TIME: TriggerTime = TriggerTime { hour: 9, min: 29 };
 pub static CHANNEL_CONF: ChannelConfig = ChannelConfig { channel_id: 619704668590833692, guild_id: 377637608848883723 };
 
 /// Extension trait for converting any [`Serialize`]-able type to BSON through a method.
@@ -156,7 +156,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
                 println!("Failed to update user {}", author_id);
             }
         }
-    } else {
+    } else if msg.contains("929") {
         println!("User sent 929 but it is not 929 {}:{}", ts.hour(), ts.minute());
     }
 
