@@ -14,7 +14,6 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
             let ctx_clone = ctx.clone();
             let data_clone = data.clone();
 
-            //let rt = Runtime::new().unwrap();
             data.runtime.spawn(async move {
                 nine29thread(&ctx_clone, &data_clone).await;
             });
