@@ -1,9 +1,10 @@
 use std::{fmt::Debug, cmp::Ordering, thread };
 
 use bson::{Bson, to_bson, doc};
-use chrono::{Local, Timelike, NaiveDateTime, Duration };
+use chrono::{Local, Timelike, DateTime };
+use chrono_tz::US::Eastern;
 use mongodm::{prelude::MongoCursor, f};
-use poise::serenity_prelude::{Member, Http, Message, Context, CacheHttp, CreateMessage};
+use poise::serenity_prelude::{Member, Http, Message, CreateMessage, Context};
 use serde::Serialize;
 use poise::futures_util::TryStreamExt;
 use serde_json::Value;
@@ -46,18 +47,18 @@ pub fn msg_to_json(msg: String) -> Value {
     return serde_json::to_value(&CreateMessage::default().content(msg).0).unwrap();
 }
 
-pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
+pub async fn nine29thread(_ctx: &Context, data: &BotDatabase) {
     println!("Check 929 thread started!");
 
     loop {
         thread::sleep(std::time::Duration::from_millis(100));
-        let mut now = Local::now();
+        let mut now: DateTime<_> = Local::now().with_timezone(&Eastern);
         if (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min) {
             println!("It is 929!");
             
             while (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min)
             {
-                now = Local::now();
+                now = Local::now().with_timezone(&Eastern);
                 thread::sleep(std::time::Duration::from_millis(100));
             }
 
@@ -68,10 +69,10 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
             let first: &mut u64 = &mut *data.first.lock().await;
 
             // if *first == 0 {
-            //     let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
+            //     let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
             // } else {
-            //     let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
-            //     let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json(
+            //     let firstuser = ctx.get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
+            //     let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json(
             //         format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
             //     )).await;
             // }
@@ -88,7 +89,7 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
 
             did929.clear();
             *first = 0;
-        } 
+        }
     }
 }
 
@@ -98,7 +99,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
     }
 
     let msg: String = message.content.to_lowercase();
-    let ts: NaiveDateTime = message.timestamp.naive_utc() - Duration::hours(4); //convert to est (TODO: this is stupid)
+    let ts: DateTime<_> = message.timestamp.with_timezone(&Eastern);
     let author_id: u64 = message.author.id.0;
 
     if (ts.hour() == TRIGGER_TIME.hour || ts.hour() == TRIGGER_TIME.hour+12) && ts.minute() == TRIGGER_TIME.min {
@@ -154,7 +155,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
                 println!("Failed to update user {}", author_id);
             }
         }
-    } else if message.content.contains("929"){
+    } else {
         println!("it is not 929 {}:{}", ts.hour(), ts.minute());
     }
 

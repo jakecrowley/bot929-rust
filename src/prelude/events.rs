@@ -11,17 +11,24 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
     match event {
         Event::Ready { data_about_bot } => {
             let user: &CurrentUser = &data_about_bot.user;
-
-            let data_clone = data.clone();
             let ctx_clone = ctx.clone();
-            tokio::spawn(async move {
+            let data_clone = data.clone();
+
+            //let rt = Runtime::new().unwrap();
+            data.runtime.spawn(async move {
                 nine29thread(&ctx_clone, &data_clone).await;
             });
 
             println!("Bot ready! Logged in as user: {}#{}", user.name, user.discriminator);
         }
         Event::Message { new_message } => {
-            check_message_for_929(new_message, data).await?;
+            let res = check_message_for_929(new_message, data).await;
+            match res {
+                Err(e) => {
+                    println!("{}", e.to_string())
+                },
+                Ok(_) => {}
+            }
         }
         Event::InteractionCreate { interaction } => {
             let mut comp: MessageComponentInteraction = interaction.clone().into_message_component().expect("Interaction could not be converted into message component.");
