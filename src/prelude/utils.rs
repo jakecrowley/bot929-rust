@@ -22,7 +22,7 @@ pub struct ChannelConfig {
     pub guild_id: u64,
 }
 
-static TRIGGER_TIME: TriggerTime = TriggerTime { hour: 10, min: 42};
+static TRIGGER_TIME: TriggerTime = TriggerTime { hour: 9, min: 29};
 pub static CHANNEL_CONF: ChannelConfig = ChannelConfig { channel_id: 619704668590833692, guild_id: 377637608848883723 };
 
 /// Extension trait for converting any [`Serialize`]-able type to BSON through a method.
@@ -52,10 +52,10 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
     loop {
         thread::sleep(std::time::Duration::from_millis(100));
         let mut now = Local::now();
-        if (now.hour() == 9 || now.hour() == TRIGGER_TIME.hour) && (now.minute() == TRIGGER_TIME.min) {
+        if (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min) {
             println!("It is 929!");
             
-            while (now.hour() == 9 || now.hour() == TRIGGER_TIME.hour) && (now.minute() == TRIGGER_TIME.min)
+            while (now.hour() == TRIGGER_TIME.hour || now.hour() == TRIGGER_TIME.hour+12) && (now.minute() == TRIGGER_TIME.min)
             {
                 now = Local::now();
                 thread::sleep(std::time::Duration::from_millis(100));
@@ -101,7 +101,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
     let ts: NaiveDateTime = message.timestamp.naive_utc() - Duration::hours(4); //convert to est (TODO: this is stupid)
     let author_id: u64 = message.author.id.0;
 
-    if (ts.hour() == 9 || ts.hour() == TRIGGER_TIME.hour) && ts.minute() == TRIGGER_TIME.min {
+    if (ts.hour() == TRIGGER_TIME.hour || ts.hour() == TRIGGER_TIME.hour+12) && ts.minute() == TRIGGER_TIME.min {
         let did929: &mut Vec<u64> = &mut *data.did929.lock().await;
         let first: &mut u64 = &mut *data.first.lock().await;
         if msg.contains("929") && !did929.contains(&author_id) {
