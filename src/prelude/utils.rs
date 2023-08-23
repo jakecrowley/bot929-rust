@@ -67,14 +67,14 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
 
             let first: &mut u64 = &mut *data.first.lock().await;
 
-            if *first == 0 {
-                let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
-            } else {
-                let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
-                let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json(
-                    format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
-                )).await;
-            }
+            // if *first == 0 {
+            //     let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
+            // } else {
+            //     let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
+            //     let _ = ctx.http().send_message(CHANNEL_CONF.channel_id, &msg_to_json(
+            //         format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
+            //     )).await;
+            // }
             println!("{} was first!", first);
 
             let did929: &mut Vec<u64> = &mut *data.did929.lock().await;
