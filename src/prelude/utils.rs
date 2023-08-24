@@ -138,11 +138,11 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
             }
 
             if *first == 0 {
+                *first = author_id;
                 profile.points += 1.5 * ((1 + (profile.currentstreak / 5)) as f64);
             } else {
                 profile.points += (1 + (profile.currentstreak / 5)) as f64;
             }
-            *first = author_id;
             
             if profile.currentstreak > profile.maxstreak {
                 profile.maxstreak = profile.currentstreak;
