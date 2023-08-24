@@ -9,6 +9,7 @@ use serenity::{GatewayIntents, Context};
 
 use mongodm::prelude::{MongoClientOptions, MongoCollection};
 use mongodm::{mongo::options::ResolverConfig, prelude::MongoDatabase, prelude::MongoClient};
+use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
 
 pub mod prelude;
@@ -106,6 +107,7 @@ async fn setup_bot_database(config: BotConfig) -> BotResult<BotDatabase>
         pastlist: pastlist_col,
         did929: Arc::new(Mutex::new(Vec::new())),
         first: Arc::new(Mutex::new(0)),
+        runtime: Arc::new(Runtime::new().unwrap())
     };
 
     Ok(db)

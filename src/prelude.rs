@@ -4,7 +4,7 @@ use mongodm::prelude::{MongoDatabase, MongoCollection};
 
 pub mod error;
 use error::BotError;
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, runtime::Runtime};
 
 pub mod utils;
 
@@ -17,6 +17,7 @@ pub struct BotDatabase {
     pub pastlist: MongoCollection<crate::Pastlist>,
     pub did929: Arc<Mutex<Vec<u64>>>,
     pub first: Arc<Mutex<u64>>,
+    pub runtime: Arc<Runtime>,
 }
 
 pub type BotContext<'a> = Context<'a, BotDatabase, BotError>;
