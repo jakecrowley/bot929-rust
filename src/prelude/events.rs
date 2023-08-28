@@ -31,7 +31,7 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
         }
         Event::InteractionCreate { interaction } => {
             let mut comp: MessageComponentInteraction = interaction.clone().into_message_component().expect("Interaction could not be converted into message component.");
-            log::info!("Component interaction triggered: custom_id = {}", comp.data.custom_id);
+            // log::info!("Component interaction triggered: custom_id = {}", comp.data.custom_id);
 
             match comp.data.custom_id.as_str() {
                 "prev" => {
