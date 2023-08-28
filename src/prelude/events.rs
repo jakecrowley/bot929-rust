@@ -36,7 +36,7 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
             match comp.data.custom_id.as_str() {
                 "prev" => {
                     let embed: &Embed = comp.message.embeds.get(0).expect("Message does not contain an embed!");
-                    let first_pos: usize = embed.description.as_ref().expect("no description").split_once(".").unwrap().0.to_string().parse::<usize>().unwrap();
+                    let first_pos: usize = embed.description.as_ref().unwrap_or(&"10.".to_string()).split_once(".").unwrap().0.to_string().parse::<usize>().unwrap();
                     if first_pos >= 10 {
                         let leaderboard_str = get_leaderboard(data, &ctx.http, first_pos - 11).await?;
                         comp.message.edit(ctx.http(), |resp| 
@@ -59,7 +59,7 @@ pub async fn event_handler(ctx: &Context, event: &Event<'_>, _framework: poise::
                 },
                 "next" => {
                     let embed: &Embed = comp.message.embeds.get(0).expect("Message does not contain an embed!");
-                    let first_pos: String = embed.description.as_ref().expect("no description").split_once(".").expect("no dot").0.to_string();
+                    let first_pos: String = embed.description.as_ref().unwrap_or(&"1.".to_string()).split_once(".").expect("no dot").0.to_string();
                     let leaderboard_str_res = get_leaderboard(data, &ctx.http, first_pos.parse::<usize>().unwrap() + 9).await;
                     let leaderboard_str: String = match leaderboard_str_res {
                         Ok(ldb) => ldb,
