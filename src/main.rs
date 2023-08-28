@@ -99,10 +99,12 @@ async fn setup_bot_database(config: BotConfig) -> BotResult<BotDatabase>
 {
     let database: MongoDatabase = setup_database(&config.mongo_uri, &config.database).await?;
     let col: MongoCollection<Nine92er> = database.collection("nine29ers");
+    let archived: MongoCollection<Nine92er> = database.collection("archived_nine29ers");
     let pastlist_col: MongoCollection<Pastlist> = database.collection("pastlist");
 
     let db: BotDatabase = BotDatabase {
         database: database,
+        archived: archived,
         nine29ers: col,
         pastlist: pastlist_col,
         did929: Arc::new(Mutex::new(Vec::new())),

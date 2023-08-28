@@ -167,6 +167,29 @@ pub fn sanitize_username(str: String) -> String {
     return str.replace("||", "\\|\\|");
 }
 
+pub async fn archive_user(data: &BotDatabase, n29er: &Nine92er) -> BotResult<()> {
+    let res = data.archived.insert_one(n29er, None).await;
+
+    match res {
+        Ok(result) => {
+            let del_res = data.nine29ers.delete_one(doc! { f!(_id in Nine92er): Bson::Int64(n29er._id as i64)}, None).await;
+            match del_res {
+                Ok(_) => {
+                    log::info!("Archived user {}", result.inserted_id);
+                },
+                Err(err) => {
+                    log::error!("Failed to archive user {}: {}", n29er._id, err);
+                }
+            }
+        },
+        Err(err) => {
+            log::error!("Failed to archive user {}: {}", n29er._id, err);
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn get_leaderboard(data: &BotDatabase, http: &Http, position: usize) -> BotResult<String> {
     let mut leaderboard_str: String = "".to_owned();
     let members: Vec<Member> = http.get_guild_members(CHANNEL_CONF.guild_id, None, None).await?;
@@ -197,6 +220,7 @@ pub async fn get_leaderboard(data: &BotDatabase, http: &Http, position: usize) -
             }
             None => {
                 log::warn!("Couldn't find member with ID {}", nine92er._id);
+                archive_user(data, nine92er).await?;
                 users.remove(i);
                 stop = if users.len() >= position + 10 { position + 10 } else { users.len() };
                 continue;
