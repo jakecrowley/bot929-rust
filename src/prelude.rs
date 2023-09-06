@@ -15,6 +15,7 @@ pub mod events;
 #[derive(Clone, Debug)]
 pub struct BotDatabase {
     pub database: MongoDatabase,
+    pub archived: MongoCollection<crate::Nine92er>,
     pub nine29ers: MongoCollection<crate::Nine92er>,
     pub pastlist: MongoCollection<crate::Pastlist>,
     pub did929: Arc<Mutex<Vec<u64>>>,
