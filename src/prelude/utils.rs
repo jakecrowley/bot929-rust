@@ -13,6 +13,12 @@ use crate::{Nine92er, Pastlist};
 
 use super::{BotResult, error::{BsonSerSnafu, BotError}, BotDatabase};
 
+#[derive(Debug)]
+pub struct FirstUser {
+    pub uid: u64,
+    pub ts: i64,
+}
+
 pub struct TriggerTime {
     pub hour: u32,
     pub min: u32,
@@ -66,13 +72,13 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
 
             thread::sleep(std::time::Duration::from_secs(1));
 
-            let first: &mut u64 = &mut *data.first.lock().await;
+            let first: &mut FirstUser = &mut *data.first.lock().await;
 
-            if *first == 0 {
+            if first.uid == 0 {
                 // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json("Nobody did 929 :(".to_string())).await;
                 log::info!("Nobody did 929 :(");
             } else {
-                let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, *first).await.unwrap();
+                let firstuser = ctx.http().get_member(CHANNEL_CONF.guild_id, first.uid).await.unwrap();
                 // let _ = ctx.send_message(CHANNEL_CONF.channel_id, &msg_to_json(
                 //     format!("{} was first!", sanitize_username(firstuser.display_name().to_string()))
                 // )).await;
@@ -89,7 +95,7 @@ pub async fn nine29thread(ctx: &Context, data: &BotDatabase) {
             let _ = data.pastlist.insert_many(docs, None).await;
 
             did929.clear();
-            *first = 0;
+            first.uid = 0;
         }
     }
 }
@@ -100,12 +106,13 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
     }
 
     let msg: String = message.content.to_lowercase();
+    let epoch: i64 = message.timestamp.timestamp_millis();
     let ts: DateTime<_> = message.timestamp.with_timezone(&Eastern);
     let author_id: u64 = message.author.id.0;
 
     if (ts.hour() == TRIGGER_TIME.hour || ts.hour() == TRIGGER_TIME.hour+12) && ts.minute() == TRIGGER_TIME.min {
         let did929: &mut Vec<u64> = &mut *data.did929.lock().await;
-        let first: &mut u64 = &mut *data.first.lock().await;
+        let first: &mut FirstUser = &mut *data.first.lock().await;
         if msg.contains("929") && !did929.contains(&author_id) {
             did929.push(author_id);
             log::info!("{} did 929!", message.author.name);
@@ -137,8 +144,9 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
                 profile.currentstreak = 1;
             }
 
-            if *first == 0 {
-                *first = author_id;
+            if first.uid == 0 || epoch < first.ts {
+                first.uid = author_id;
+                first.ts = epoch;
                 profile.points += 1.5 * ((1 + (profile.currentstreak / 5)) as f64);
             } else {
                 profile.points += (1 + (profile.currentstreak / 5)) as f64;

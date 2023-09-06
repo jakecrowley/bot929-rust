@@ -6,6 +6,8 @@ pub mod error;
 use error::BotError;
 use tokio::{sync::Mutex, runtime::Runtime};
 
+use self::utils::FirstUser;
+
 pub mod utils;
 
 pub mod events;
@@ -16,7 +18,7 @@ pub struct BotDatabase {
     pub nine29ers: MongoCollection<crate::Nine92er>,
     pub pastlist: MongoCollection<crate::Pastlist>,
     pub did929: Arc<Mutex<Vec<u64>>>,
-    pub first: Arc<Mutex<u64>>,
+    pub first: Arc<Mutex<FirstUser>>,
     pub runtime: Arc<Runtime>,
 }
 

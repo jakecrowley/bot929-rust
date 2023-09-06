@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use poise::{serenity_prelude as serenity, FrameworkOptions, PrefixFrameworkOptions};
 
+use prelude::utils::FirstUser;
 use prelude::{BotResult, BotDatabase};
 use serde::{Serialize, Deserialize};
 use serenity::{GatewayIntents, Context};
@@ -106,7 +107,7 @@ async fn setup_bot_database(config: BotConfig) -> BotResult<BotDatabase>
         nine29ers: col,
         pastlist: pastlist_col,
         did929: Arc::new(Mutex::new(Vec::new())),
-        first: Arc::new(Mutex::new(0)),
+        first: Arc::new(Mutex::new(FirstUser { uid: 0, ts: 0 })),
         runtime: Arc::new(Runtime::new().unwrap())
     };
 
