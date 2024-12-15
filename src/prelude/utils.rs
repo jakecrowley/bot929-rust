@@ -106,7 +106,7 @@ pub async fn check_message_for_929(message: &Message, data: &BotDatabase) -> Bot
     }
 
     let msg: String = message.content.to_lowercase();
-    let epoch: i64 = message.timestamp.timestamp_millis();
+    let epoch: i64 = message.timestamp.timestamp_micros();
     let ts: DateTime<_> = message.timestamp.with_timezone(&Eastern);
     let author_id: u64 = message.author.id.0;
 
